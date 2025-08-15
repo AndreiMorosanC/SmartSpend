@@ -1,0 +1,4 @@
+node_modules/
+.env
+smartspend-e6c09-firebase-adminsdk-fbsvc-6c7b535d88.json
+.DS_Store
