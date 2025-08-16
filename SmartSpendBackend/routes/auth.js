@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { admin } from '../lib/firebaseAdmin.js';
-
+import User from "../models/User.js";
 const router = Router()
 
 const SESSION_MS = 7 * 24 * 60 * 60 * 1000;
@@ -15,6 +15,20 @@ router.post('/sessionLogin', async (req, res) => {
     // Verifica el ID token de Firebase recibido del cliente
     const decoded = await admin.auth().verifyIdToken(idToken, true);
 
+      const uid = decoded.uid;
+    const email = decoded.email || null;
+    const username =
+      decoded.name || (email ? email.split('@')[0] : `user_${uid.slice(0,6)}`);
+
+    await User.updateOne(
+      { uid }, // criterio
+      {
+        $setOnInsert: { uid, email, username, createdAt: new Date() },
+        $set: { lastLoginAt: new Date(), updatedAt: new Date() }
+      },
+      { upsert: true }
+    );
+    
     // Crea la cookie de sesión de Firebase
     const sessionCookie = await admin.auth().createSessionCookie(idToken, {
       expiresIn: SESSION_MS,
